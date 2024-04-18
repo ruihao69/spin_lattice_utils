@@ -22,7 +22,7 @@ def get_init_state_one(slp: SpinLatticeParamsOneSpin, initial_state: str) -> str
         raise ValueError("The initial state must be either 'spin_up' or 'spin_down'.")
     
 def get_init_state_two(slp: SpinLatticeParamsTwoSpin, initial_state: str) -> str:
-    raise NotImplementedError("The method get_init_state_two is not implemented yet.")
+    return slp.get_init_state_number(initial_state)
 
 def get_initial_state(slp: ParamsBase, initial_state: str) -> str:
     if isinstance(slp, SpinLatticeParamsOneSpin):
@@ -109,31 +109,22 @@ def get_inp_json(
 def linspace_log(lb, ub, n):
     out = np.linspace(np.log(lb), np.log(ub), n)
     return np.exp(out)
-
-def write_json_one_spin(dir: str, json_init: dict) -> None:
-    # it is a kernel job if there's a kernel key in json_init
+def write_json(dir: str, json_init: dict) -> None:
+    # if isinstance(slp, SpinLatticeParamsOneSpin):
+    #     write_json_one_spin(dir, json_init)
+    # elif isinstance(slp, SpinLatticeParamsTwoSpin):
+    #     write_json_two_spin(dir, json_init)
     is_kernel = "kernel" in json_init
     if is_kernel:
+        dim = np.sqrt(json_init["ham1"]["real"].shape[0]).astype(int)
+        assert dim ** 2 == json_init["ham1"]["real"].shape[0], "The dimension of the Hamiltonian matrix must be a square number."
         inistate = json_init["inistate"]
-        if inistate == 0:
-            fn = os.path.join(dir, "00.input.json")
-        else:
-            fn = os.path.join(dir, "01.input.json")
+        num = f"{inistate:02d}"
+        fn = os.path.join(dir, f"{num}.input.json")
     else:
         fn = os.path.join(dir, "input.json")
-
     with open(fn, 'w') as f:
-        json.dump(json_init, f, indent=2, default=convert)
-        
-def write_json_two_spin(dir: str, json_init: dict) -> None:
-    raise NotImplementedError("The method write_json_two_spin is not implemented yet.")
-
-
-def write_json(dir: str, json_init: dict, slp: ParamsBase) -> None:
-    if isinstance(slp, SpinLatticeParamsOneSpin):
-        write_json_one_spin(dir, json_init)
-    elif isinstance(slp, SpinLatticeParamsTwoSpin):
-        write_json_two_spin(dir, json_init)
+        json.dump(json_init, f, indent=2, default=convert) 
     
 
 def get_deom_inp_bo(

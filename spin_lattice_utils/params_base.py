@@ -28,5 +28,9 @@ class ParamsBase(ABC):
     
     @abstractclassmethod 
     def get_interaction_scheme(self) -> InteractionScheme:
-        pass
+        raise NotImplementedError("Please implement get_interaction_scheme method.")
+    
+    @abstractclassmethod
+    def get_rho0(self) -> NDArray[np.complex128]:
+        raise NotImplementedError("Please implement get_rho0 method.")
 # %%

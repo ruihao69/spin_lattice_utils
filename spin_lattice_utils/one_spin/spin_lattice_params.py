@@ -46,3 +46,11 @@ class SpinLatticeParamsOneSpin(ParamsBase):
     
     def get_interaction_scheme(self) -> InteractionScheme:
         return self.interaction_scheme
+    
+    def get_rho0(self, init_state: str) -> NDArray[np.complex128]:
+        if init_state == "spin_up":
+            return np.array([[1, 0], [0, 0]], dtype=np.complex128)
+        elif init_state == "spin_down":
+            return np.array([[0, 0], [0, 1]], dtype=np.complex128)
+        else:
+            raise ValueError(f"init_state must be either 'spin_up' or 'spin_down'. Got {init_state}.") 

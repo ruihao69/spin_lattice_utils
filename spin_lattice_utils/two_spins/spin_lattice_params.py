@@ -42,7 +42,7 @@ class SpinLatticeParamsTwoSpin(ParamsBase):
         
         # get system Hamiltonian
         sz1 = kron(0.5 * self.Delta * sz, id)
-        sz2 = kron(id, 0.5 * self.Delta * sz) if self.alignment == Alignment.Parallel else kron(id, -sz)
+        sz2 = kron(id, 0.5 * self.Delta * sz)
         Hs_0 = sz1 + sz2
         
         # get spin-spin interaction Hamiltonian
@@ -67,6 +67,44 @@ class SpinLatticeParamsTwoSpin(ParamsBase):
     
     def get_interaction_scheme(self) -> InteractionScheme:
         return self.interaction_scheme
+    
+    def get_rho0(self, init_state: str) -> NDArray[np.complex128]:
+        up = np.array([1, 0])[:, np.newaxis]
+        dn = np.array([0, 1])[:, np.newaxis]
+        if init_state == "spin_up":
+            if self.alignment == Alignment.Parallel:
+                return kron(up, up)
+            elif self.alignment == Alignment.Antiparallel:
+                return kron(up, dn)
+        elif init_state == "spin_down":
+            if self.alignment == Alignment.Parallel:
+                return kron(dn, dn)
+            elif self.alignment == Alignment.Antiparallel:
+                return kron(dn, up)
+        else:
+            raise ValueError(f"init_state must be either 'spin_up' or 'spin_down'. Got {init_state}.")
+        
+    def get_init_state_number(self, init_state: str) -> int:
+        init_state_number = {
+            'up_up': 0,
+            'up_down': 1,
+            'down_up': 2,
+            'down_down': 3
+        }
+        if init_state == "spin_up":
+            if self.alignment == Alignment.Parallel:
+                key = 'up_up'
+            else:
+                key = 'up_down'
+        elif init_state == "spin_down":
+            if self.alignment == Alignment.Parallel:
+                key = 'down_down'
+            else:
+                key = 'down_up'
+        else:
+            raise ValueError(f"init_state must be either 'spin_up' or 'spin_down'. Got {init_state}.")
+        
+        return init_state_number[key]
 
 # %%
 if __name__ == "__main__":
