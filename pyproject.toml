@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spin_lattice_utils"
+version = "0.0.1"
+authors = [
+  { name="Rui-Hao Bi", email="biruihao@westlake.edu.cn"},
+]
+description="A helper package to generate DEOM inputs for spin-lattice interaction model."
+readme = "README.md"
+requires-python = ">=3.11"
