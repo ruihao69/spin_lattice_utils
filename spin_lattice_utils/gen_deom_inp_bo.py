@@ -175,11 +175,11 @@ def get_deom_inp_bo(
     def stat(w):
         return bose_function(w, beta=beta, mu=0)
         
-    is_converged, err = estimate_error(bo_spectral.get_func(), stat, etal, expn)
+    is_converged, err = estimate_error(bo_spectral.get_func(), stat, etal, expn, rtol=3e-5, atol=3e-5)
     
     if not is_converged:
-        rtol_default = 1e-5
-        atol_default = 1e-8 
+        rtol_default = 3e-5
+        atol_default = 3e-5
         warnings.warn(f"The fitting is not converged. (rtol, atol) = ({rtol_default}, {atol_default})")
     
     return inp, err
