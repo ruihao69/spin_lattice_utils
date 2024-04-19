@@ -8,7 +8,7 @@ from spin_lattice_utils.third_party.prony import prony
 from spin_lattice_utils.spectral_functions.bose_spectral_function import BoseSpectralFunction
 
 import warnings
-from typing import Union
+from typing import Union, Tuple
 
 # util functions
 
@@ -102,22 +102,70 @@ def decompose_spe_prony_moonshine(spe: sp.Mul,
 
     expn, etal = prony(data, nind[0], nind[1])
 
-    error = estimate_error(gen_jw, stat, etal, expn, )
+    _, error = estimate_error(gen_jw, stat, etal, expn, )
     print(f"The estimated error for prony fitting is {error}")
 
     return get_symmetrized_deom_inputs(etal, expn)
 
-def estimate_error(gen_jw, stat, etal, expn):
+def normalize_data(y, mean=None, std=None):
+    """
+    Function to normalize the data using z-score normalization.
+
+    Parameters:
+    y (ndarray): Data points.
+    mean (float): Mean value (optional).
+    std (float): Standard deviation (optional).
+
+    Returns:
+    ndarray: Normalized data points.
+    float: Mean value.
+    float: Standard deviation.
+    """
+    if mean is None:
+        mean = np.nanmean(y)
+    if std is None:
+        std = np.nanstd(y)
+
+    normalized_y = (y - mean) / std
+
+    return normalized_y, mean, std
+
+def is_converged(y, y_fitted, rtol=1e-5, atol=1e-8) -> Tuple[bool, float]:
+    """
+    Function to determine if the fitting is converged based on the fitted data and original data points.
+
+    Parameters:
+    y (ndarray): Original data points.
+    y_fitted (ndarray): Fitted data points.
+    rtol (float): Relative tolerance (default: 1e-5).
+    atol (float): Absolute tolerance (default: 1e-8).
+
+    Returns:
+    bool: True if the fitting is converged, False otherwise.
+    """
+    normalized_y, mean, std = normalize_data(y)
+    normalized_y_fitted, _, _ = normalize_data(y_fitted, mean, std)
+
+    diff = np.abs(normalized_y - normalized_y_fitted)
+    max_diff = np.nanmax(diff)
+    
+    tol_err = atol + rtol * np.nanstd(np.abs(normalized_y))
+
+    return max_diff <= tol_err, max_diff
+
+def estimate_error(gen_jw, stat, etal, expn, rtol=1e-5, atol=1e-8):
     len_ = 30000
     spe_wid = 100
 
     w = np.append(np.linspace(-spe_wid, 0, len_), np.linspace(0, spe_wid, len_))
     jw_prony = get_spectral_function_from_exponentials(w, expn, etal).real
     jw_exact = gen_jw(w) * stat(w)
+    
 
-    diff = np.nanmax(np.abs(jw_exact - jw_prony))
+    # diff = np.nanmax(np.abs(jw_exact - jw_prony))
+    is_converged_, diff = is_converged(jw_exact, jw_prony, rtol, atol)
 
-    return diff
+    return np.all(is_converged_), diff
 
 def is_valid_nind(l: Union[list, int]):
     if isinstance(l, list):

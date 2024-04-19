@@ -8,10 +8,12 @@ from spin_lattice_utils.spectral_functions import BrownianSpectralFunction, deco
 from spin_lattice_utils.third_party.deom import complex_2_json, init_qmd, init_qmd_quad, convert
 from spin_lattice_utils.third_party.prony import bose_function
 from spin_lattice_utils.spectral_functions import estimate_error
+from spin_lattice_utils.units import energy_in_kelvin
 
 import os
 import json
 from typing import Tuple, Union
+import warnings
 
 def get_init_state_one(slp: SpinLatticeParamsOneSpin, initial_state: str) -> str:
     if initial_state == 'spin_up':
@@ -137,14 +139,48 @@ def get_deom_inp_bo(
     zeta: float = 1.0,
     OmegaB: float = 3.0,
     is_kernel: bool = False,
+    decompose_on_the_fly: bool = False,
 ) -> Tuple[dict, float]:
     bo_spectral = BrownianSpectralFunction.initialize(λ, beta, zeta, OmegaB, prony_tf)
-    etal, etar, etaa, expn = decompose_SpectralFunction(bo_spectral, nind)
+    
+    # check if spectral function decomposition is already done
+    import spin_lattice_utils
+    sucessful_decomposition = False
+    spectral_predecomposed = os.path.join(spin_lattice_utils.__path__[0], "pre_decomposed_spectrum_data", f"BO-λ_{λ}-OmegaB_{OmegaB}-zeta_{zeta}.npz")
+    T_in_kelvin = energy_in_kelvin(1 / beta)
+    if os.path.exists(spectral_predecomposed):
+        pre_decomposed_data = np.load(spectral_predecomposed, allow_pickle=True)
+        keys = np.array(list(pre_decomposed_data.keys()))
+        keys_array = keys.astype(np.float64)
+        is_key = np.isclose(keys_array, T_in_kelvin)
+        if (np.any(is_key)) and np.sum(is_key) == 1:
+            key = keys[is_key][0]
+            data = pre_decomposed_data[key].item()  
+            etal = data["etal"]
+            etar = data["etar"]
+            etaa = data["etaa"]
+            expn = data["expn"]
+            nind = data["nind_re"] + data["nind_im"]
+            sucessful_decomposition = True
+    if not sucessful_decomposition:
+        if decompose_on_the_fly:
+            etal, etar, etaa, expn = decompose_SpectralFunction(bo_spectral, nind)
+        else:
+            raise RuntimeError(f"The given parameters are not pre-decomposed. You can either set decompose_on_the_fly=True or pre-decompose the spectral function with the following parameters: λ={λ}, OmegaB={OmegaB}, zeta={zeta} at T={T_in_kelvin} K.")
+            
+    
+    # etal, etar, etaa, expn = decompose_SpectralFunction(bo_spectral, nind)
     inp = get_inp_json(params, ctrls, etal, etar, etaa, expn, is_kernel)
     
     def stat(w):
         return bose_function(w, beta=beta, mu=0)
         
-    err = estimate_error(bo_spectral.get_func(), stat, etal, expn)
+    is_converged, err = estimate_error(bo_spectral.get_func(), stat, etal, expn)
+    
+    if not is_converged:
+        rtol_default = 1e-5
+        atol_default = 1e-8 
+        warnings.warn(f"The fitting is not converged. (rtol, atol) = ({rtol_default}, {atol_default})")
+    
     return inp, err
     

@@ -15,7 +15,6 @@ class GlobalParameters:
     Delta_in_GHz: float = 10.0
 
 
-
 def main(temperature_in_kelvin: float = 10.0, lambd: float = 0.003):
     # get global parameters
     gp = GlobalParameters()
