@@ -47,6 +47,9 @@ def energy_in_GHz(energy: float) -> float:
 def GHz_to_energy(GHz: float) -> float:
     return GHz / ENERGY_UNIT_IN_GIGAHERTZ
 
+def unit_time_to_picosecond(time: float) -> float:
+    raise NotImplemented
+
 
 def test():
     energy = 1.0

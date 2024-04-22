@@ -12,7 +12,7 @@ description="A helper package to generate DEOM inputs for spin-lattice interacti
 readme = "README.md"
 requires-python = ">=3.11"
 
-[tool.hatch.build]
+[tool.hatch.sdist]
 include = [
   "/spin_lattice_utils/pre_decomposed_spectrum_data/*.npz",
 ]

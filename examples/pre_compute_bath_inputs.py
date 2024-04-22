@@ -128,11 +128,31 @@ def main(
         }
         print(f"Exiting T_in_kelvin={T_in_kelvin} with error={err}")    
         np.savez(f"{project_prefix}-T_{T_in_kelvin}.npz", **data[str(T_in_kelvin)])
-    np.savez(f"{project_prefix}.npz", **data)
+    if os.path.exists(f"{project_prefix}.npz"):
+        _data_prev = np.load(f"{project_prefix}.npz", allow_pickle=True) 
+        data_prev = {key: val.item() for key, val in _data_prev.items()}
+        for key, val in data.items():
+            if key in data_prev:
+                import warnings
+                warnings.warn(f"Key {key} already exists in the data.")
+                if data_prev[key]["error"] > val["error"]:
+                    data_prev[key] = val
+            else:
+                data_prev[key] = val
+        np.savez(f"{project_prefix}.npz", **data_prev)
+    else:
+        np.savez(f"{project_prefix}.npz", **data)
     
 # %%
 if __name__ == "__main__":
-    main(λ=0.003)
+    def get_T_list_seg1():
+        return np.arange(1, 11)
+
+    def get_T_list_seg2():
+        return np.arange(12, 22, 2)
+    
+    #main(λ=0.003, T_in_kelvin_array=get_T_list_seg1())
+    main(λ=0.003, T_in_kelvin_array=get_T_list_seg2())
                 
 # %%
 import os
@@ -141,7 +161,10 @@ import glob
 
 data = np.load("BO-λ_0.003-OmegaB_3.0-zeta_1.0.npz", allow_pickle=True)
 
-T_list_str = np.arange(1, 11).astype(str)
+
+
+# T_list_str = [f"{T}" for T in get_T_list_seg1()] 
+T_list_str = [f"{T}" for T in get_T_list_seg2()]
 
 for T_str in T_list_str:
     # print(f"{data[T_str].item()['error']=}")
