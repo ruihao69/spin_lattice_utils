@@ -2,6 +2,7 @@ import numpy as np
 
 from spin_lattice_utils.deom_ctrls import DEOM_CTRLS
 from spin_lattice_utils.params_base import ParamsBase
+from spin_lattice_utils.interaction_scheme import InteractionScheme
 from spin_lattice_utils.one_spin import SpinLatticeParamsOneSpin
 from spin_lattice_utils.two_spins import SpinLatticeParamsTwoSpin
 from spin_lattice_utils.spectral_functions import BrownianSpectralFunction, decompose_SpectralFunction
@@ -86,7 +87,7 @@ def get_inp_json(
     
     NSYS = get_NSYS(slp)
     
-    if slp.get_interaction_scheme() == 'quadratic':
+    if slp.get_interaction_scheme() == InteractionScheme.QUADRATIC:
         alpha0, alpha1, alpha2 = slp.get_alphas()
         qmd2 = slp.get_Q2()
         renorm = complex_2_json(

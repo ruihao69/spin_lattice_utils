@@ -108,9 +108,24 @@ class SpinLatticeParamsTwoSpin(ParamsBase):
 
 # %%
 if __name__ == "__main__":
-    params = SpinLatticeParamsTwoSpin()
+    params = SpinLatticeParamsTwoSpin(gamma=0.1,spin_spin_type=SpinSpinType.SdotS)
     print(f"{params.get_Hs()}")
-    print(f"{params=}")
-    print(f"{params.get_Q()}")
+    
+    params = SpinLatticeParamsTwoSpin(gamma=0.01)
+    print(f"{params.get_Hs()}")
+    
+    params = SpinLatticeParamsTwoSpin(gamma=0.0)
+    print(f"{params.get_Hs()}")
+    # print(f"{params=}")
+    # print(f"{params.get_Q()}")
+    
+    print("===")    
+    print(SzSz(0.1))
+    
+    print("==")
+    sz = sigma_z()
+    id = np.eye(2)
+    szsz = kron(sz, id) +  kron(id, sz)
+    print(szsz)
     
 # %%
