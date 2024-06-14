@@ -115,6 +115,7 @@ def get_inp_json(
 def linspace_log(lb, ub, n):
     out = np.linspace(np.log(lb), np.log(ub), n)
     return np.exp(out)
+
 def write_json(dir: str, json_init: dict) -> None:
     # if isinstance(slp, SpinLatticeParamsOneSpin):
     #     write_json_one_spin(dir, json_init)
@@ -122,9 +123,10 @@ def write_json(dir: str, json_init: dict) -> None:
     #     write_json_two_spin(dir, json_init)
     is_kernel = "kernel" in json_init
     if is_kernel:
-        dim = np.sqrt(json_init["ham1"]["real"].shape[0]).astype(int)
-        assert dim ** 2 == json_init["ham1"]["real"].shape[0], "The dimension of the Hamiltonian matrix must be a square number."
+        dim = np.sqrt(len(json_init["ham1"]["real"])).astype(int)
+        assert dim ** 2 == len(json_init["ham1"]["real"]), "The dimension of the Hamiltonian matrix must be a square number."
         inistate = json_init["inistate"]
+        print(f"{inistate=}")
         num = f"{inistate:02d}"
         fn = os.path.join(dir, f"{num}.input.json")
     else:

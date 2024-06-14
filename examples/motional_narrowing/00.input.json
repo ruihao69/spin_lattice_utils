@@ -10,8 +10,8 @@
     "sc2": false,
     "dt-method": true,
     "ti": 0,
-    "tf": 100.0,
-    "dt": 0.01,
+    "tf": 1000.0,
+    "dt": 0.03,
     "backup": true
   },
   "expn": {
@@ -46,6 +46,11 @@
     "imag": [
       0.0
     ]
+  },
+  "kernel": {
+    "kernel": true,
+    "population": true,
+    "system": false
   },
   "qmdta_l": {
     "if_initial": true,

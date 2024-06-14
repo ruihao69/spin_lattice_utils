@@ -24,6 +24,7 @@ class MotionNarrowing(ParamsBase):
     alpha0: Optional[float] = None
     alpha1: Optional[float] = None
     alpha2: Optional[float] = None
+    init_state: str = "spin_up"
     
     def __post_init__(self):
         if self.interaction_scheme == InteractionScheme.QUADRATIC:
@@ -51,11 +52,21 @@ class MotionNarrowing(ParamsBase):
         return self.interaction_scheme
     
     def get_rho0(self) -> np.ndarray:
-        return np.array([[1, 0], [0, 0]])
+        if self.init_state == 'spin_up':
+            return np.array([[1.0, 0.0], [0.0, 0.0]])
+        elif self.init_state == 'spin_down':
+            return np.array([[0.0, 0.0], [0.0, 1.0]]) 
+        else:
+            raise ValueError("Please input `spin_up` or `spin_down` for init_state.")
     
     def get_exponentials(self ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         etal, expn = np.array([self.Delta_corr**2]), np.array([self.Lambda_corr])
         return sort_symmetry(etal, expn)
     
     def get_initial_state(self) -> str:
-        return 0
+        if self.init_state == 'spin_up':
+            return 0
+        elif self.init_state == 'spin_down':
+            return 1
+        else:
+            raise ValueError("Please input `spin_up` or `spin_down` for init_state.")
