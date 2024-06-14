@@ -6,6 +6,7 @@ from spin_lattice_utils.interaction_scheme import InteractionScheme
 from spin_lattice_utils.one_spin import SpinLatticeParamsOneSpin
 from spin_lattice_utils.two_spins import SpinLatticeParamsTwoSpin
 from spin_lattice_utils.spectral_functions import BrownianSpectralFunction, decompose_SpectralFunction
+from spin_lattice_utils.motional_narrowing import MotionNarrowing
 from spin_lattice_utils.third_party.deom import complex_2_json, init_qmd, init_qmd_quad, convert
 from spin_lattice_utils.third_party.prony import bose_function
 from spin_lattice_utils.spectral_functions import estimate_error
@@ -32,11 +33,13 @@ def get_initial_state(slp: ParamsBase, initial_state: str) -> str:
         return get_init_state_one(slp, initial_state)
     elif isinstance(slp, SpinLatticeParamsTwoSpin):
         return get_init_state_two(slp, initial_state)
+    elif isinstance(slp, MotionNarrowing):
+        return slp.get_initial_state()
     else:
         raise ValueError("The input parameter must be an instance of SpinLatticeParamsOneSpin or SpinLatticeParamsTwoSpin.")
     
 def get_NSYS(slp: ParamsBase) -> int:
-    if isinstance(slp, SpinLatticeParamsOneSpin):
+    if isinstance(slp, SpinLatticeParamsOneSpin) or isinstance(slp, MotionNarrowing):
         return 2
     elif isinstance(slp, SpinLatticeParamsTwoSpin):
         return 4
@@ -164,7 +167,9 @@ def get_deom_inp_bo(
             nind = data["nind_re"] + data["nind_im"]
             sucessful_decomposition = True
     if not sucessful_decomposition:
-        if decompose_on_the_fly:
+        if hasattr(params, "get_exponentials"):
+            etal, etar, etaa, expn = params.get_exponentials()
+        elif decompose_on_the_fly:
             etal, etar, etaa, expn = decompose_SpectralFunction(bo_spectral, nind)
         else:
             raise RuntimeError(f"The given parameters are not pre-decomposed. You can either set decompose_on_the_fly=True or pre-decompose the spectral function with the following parameters: λ={λ}, OmegaB={OmegaB}, zeta={zeta} at T={T_in_kelvin} K.")
@@ -175,13 +180,16 @@ def get_deom_inp_bo(
     
     def stat(w):
         return bose_function(w, beta=beta, mu=0)
+       
+    if not isinstance(params, MotionNarrowing): 
+        is_converged, err = estimate_error(bo_spectral.get_func(), stat, etal, expn, rtol=3e-5, atol=3e-5)
+    
+        if not is_converged:
+            rtol_default = 3e-5
+            atol_default = 3e-5
+            warnings.warn(f"The fitting is not converged. (rtol, atol) = ({rtol_default}, {atol_default})")
+    else:
+        err = None
         
-    is_converged, err = estimate_error(bo_spectral.get_func(), stat, etal, expn, rtol=3e-5, atol=3e-5)
-    
-    if not is_converged:
-        rtol_default = 3e-5
-        atol_default = 3e-5
-        warnings.warn(f"The fitting is not converged. (rtol, atol) = ({rtol_default}, {atol_default})")
-    
     return inp, err
     
